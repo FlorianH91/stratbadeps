@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Évaluation des stratégies - Badminton</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--white:#e6eef6}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;background:linear-gradient(180deg,#071029 0%, #0e1b2a 100%);color:var(--white);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px}
+    .app{width:100%;max-width:980px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    h1{font-size:20px;margin:0}
+    .card{background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6);}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type="text"]{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--white)}
+    .row{display:flex;gap:10px}
+    .btn{padding:8px 12px;border-radius:10px;border:0;background:var(--accent);color:#012;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--white)}
+    .strategies{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:8px}
+    .strategy {background: var(--accent); color: #012; padding: 10px;border-radius: 8px;border: 1px solid rgba(255,255,255,0.08); font-size: 14px;cursor: pointer;transition: opacity 0.2s;}
+    .strategy:hover {opacity: 0.85;}
+    .btn--disabled{opacity:0.45;pointer-events:none;border-style:solid;background:rgba(255,255,255,0.03);color:var(--muted);}
+    .flex-between{display:flex;justify-content:space-between;align-items:center}
+    .hidden{display:none}
+    .scoreboard{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .panel{flex:1;min-width:200px}
+    .score{font-size:28px;font-weight:700}
+    .controls{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .small{font-size:13px;color:var(--muted)}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+    table{width:100%;border-collapse:collapse;background:transparent}
+    th,td{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03);text-align:left;color:var(--white)}
+    .final-small{font-size:13px;color:var(--muted);margin-top:6px}
+    @media (max-width:600px){h1{font-size:18px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="card" style="padding:10px;display:flex;align-items:center;gap:12px">
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='34' height='34'><circle cx='12' cy='12' r='10' fill='%2306b6d4'/></svg>" alt="logo" style="width:34px;height:34px;border-radius:8px;"/>
+        <div>
+          <h1>Évaluation stratégies - Badminton (prototype)</h1>
+          <div class="small">3 joueurs — 3 matchs × 2 sets — mobile friendly</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="card" id="mainCard">
+      <!-- STEP: setup -->
+      <section id="setup">
+        <label>Nom du Joueur 1 (devineur initial) :</label>
+        <input id="p1name" type="text" value="Joueur 1" />
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <div style="flex:1">
+            <label>Nom du Joueur 2 :</label>
+            <input id="p2name" type="text" value="Joueur 2" />
+          </div>
+          <div style="flex:1">
+            <label>Nom du Joueur 3 :</label>
+            <input id="p3name" type="text" value="Joueur 3" />
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" id="startBtn">Démarrer la session</button>
+          <button class="btn ghost" id="explainBtn">Voir explications strategies</button>
+        </div>
+      </section>
+
+      <!-- STEP: main match flow -->
+      <section id="flow" class="hidden">
+        <div class="flex-between">
+          <div class="small">Match <span id="matchIndex">1</span> / 3 — Devineur: <strong id="devName"></strong></div>
+          <div class="small">Prochain: <span id="nextDev"></span></div>
+        </div>
+
+        <hr style="margin:10px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)"/>
+
+        <!-- stage: choose strategies (secret) -->
+        <div id="chooseStage" class="card" style="margin-bottom:12px">
+          <div class="flex-between"><div><strong>Choix secret des stratégies</strong></div><div class="small">Les adversaires choisissent, le devineur ne voit pas.</div></div>
+
+          <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:230px" class="panel card">
+              <div class="small">Adversaire A (<span id="opAname"></span>)</div>
+              <div id="opAChoices" class="strategies"></div>
+              <div style="margin-top:8px"><button class="btn ghost" id="cancelA">Annuler stratégie A</button></div>
+            </div>
+
+            <div style="flex:1;min-width:230px" class="panel card">
+              <div class="small">Adversaire B (<span id="opBname"></span>)</div>
+              <div id="opBChoices" class="strategies"></div>
+              <div style="margin-top:8px"><button class="btn ghost" id="cancelB">Annuler stratégie B</button></div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;gap:8px">
+            <button class="btn ghost" id="skipChoices">Je confirme que les choix sont prêts</button>
+          </div>
+        </div>
+
+        <!-- stage: set play -->
+        <div id="playStage" class="hidden card">
+          <h3 id="setTitle">Set</h3>
+          <div class="scoreboard">
+            <div class="panel card">
+              <div class="small">Joueur</div>
+              <div id="leftName" style="font-weight:700;margin-top:6px">-</div>
+              <div class="score" id="leftScore">0</div>
+              <div class="small">Bonus stratégie: <span id="leftBonus">0</span></div>
+              <div class="controls">
+                <button class="btn" id="leftPlus">+1</button>
+                <button class="btn ghost" id="leftPlusBonus">+1 + bonus</button>
+              </div>
+            </div>
+
+            <div class="panel card">
+              <div class="small">Joueur</div>
+              <div id="rightName" style="font-weight:700;margin-top:6px">-</div>
+              <div class="score" id="rightScore">0</div>
+              <div class="small">Bonus stratégie: <span id="rightBonus">0</span></div>
+              <div class="controls">
+                <button class="btn" id="rightPlus">+1</button>
+                <button class="btn ghost" id="rightPlusBonus">+1 + bonus</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px">
+            <div class="small">Observateur sur l'app: <strong id="observerName"></strong></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn ghost" id="resetSet">Réinitialiser set</button>
+              <button class="btn" id="endSet">Terminer set (force)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- stage: guessing -->
+        <div id="guessStage" class="hidden card">
+          <h3>Devineur : <span id="devineurGuessName"></span> — Deviner les stratégies</h3>
+          <div class="small">Sélectionner la stratégie jouée par chaque adversaire.</div>
+          <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+            <div style="flex:1" class="card panel">
+              <div class="small">Stratégie supposée pour <strong id="guessAname"></strong></div>
+              <select id="guessAselect" style="width:100%;padding:8px;border-radius:8px;background:#fff;color:#000;border:1px solid rgba(0,0,0,0.1)">
+                <option value="">-- Choisir --</option>
+              </select>
+            </div>
+            <div style="flex:1" class="card panel">
+              <div class="small">Stratégie supposée pour <strong id="guessBname"></strong></div>
+              <select id="guessBselect" style="width:100%;padding:8px;border-radius:8px;background:#fff;color:#000;border:1px solid rgba(0,0,0,0.1)">
+                <option value="">-- Choisir --</option>
+              </select>
+            </div>
+          </div>
+          <div style="text-align:right;margin-top:10px"><button class="btn" id="submitGuesses">Valider devinettes</button></div>
+        </div>
+
+        <!-- summary per match -->
+        <div id="matchSummary" class="hidden card" style="margin-top:12px"></div>
+
+        <!-- control next -->
+        <div style="display:flex;justify-content:space-between;margin-top:12px">
+          <button class="btn ghost" id="prevMatch">Retour</button>
+          <button class="btn" id="nextMatch">Suivant</button>
+        </div>
+
+      </section>
+
+      <!-- final leaderboard -->
+      <section id="final" class="hidden card" style="margin-top:12px">
+        <h3>Classement final</h3>
+        <div class="final-small">Détails affichés sous forme "a + b + c = total"</div>
+        <table id="leaderboard">
+          <thead><tr><th>Joueur</th><th>Points match</th><th>Bonus stratégie</th><th>Bonus devinettes</th><th>Total</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div style="display:flex;justify-content:space-between;margin-top:10px">
+          <div><button class="btn" id="exportPdfBtn">Exporter PDF</button></div>
+          <div><button class="btn" id="restart">Redémarrer</button></div>
+        </div>
+      </section>
+
+      <footer style="margin-top:14px">StratBadEPS - HUGEDET Florian</footer>
+    </main>
+  </div>
+
+  <!-- jsPDF CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    // --- Data model ---
+    const STRATEGIES = [
+      'Alterner largeur (droite-gauche)',
+      'Alterner profondeur (court-long)',
+      'Fixer fond -> amorti',
+      'Fixer amorti -> lober',
+      'Viser les 4 coins',
+      'Fixer sur son revers',
+      'Accélérer le jeu (smash/drive)'
+    ];
+
+    // UI refs
+    const startBtn = document.getElementById('startBtn');
+    const explainBtn = document.getElementById('explainBtn');
+
+    const setupSection = document.getElementById('setup');
+    const flowSection = document.getElementById('flow');
+    const finalSection = document.getElementById('final');
+
+    const p1nameInput = document.getElementById('p1name');
+    const p2nameInput = document.getElementById('p2name');
+    const p3nameInput = document.getElementById('p3name');
+
+    // flow refs
+    const matchIndexEl = document.getElementById('matchIndex');
+    const devNameEl = document.getElementById('devName');
+    const nextDevEl = document.getElementById('nextDev');
+    const opAname = document.getElementById('opAname');
+    const opBname = document.getElementById('opBname');
+
+    const opAChoices = document.getElementById('opAChoices');
+    const opBChoices = document.getElementById('opBChoices');
+    const cancelA = document.getElementById('cancelA');
+    const cancelB = document.getElementById('cancelB');
+    const skipChoices = document.getElementById('skipChoices');
+
+    const setTitle = document.getElementById('setTitle');
+    const playStage = document.getElementById('playStage');
+    const chooseStage = document.getElementById('chooseStage');
+    const guessStage = document.getElementById('guessStage');
+    const matchSummary = document.getElementById('matchSummary');
+
+    const leftNameEl = document.getElementById('leftName');
+    const rightNameEl = document.getElementById('rightName');
+    const leftScoreEl = document.getElementById('leftScore');
+    const rightScoreEl = document.getElementById('rightScore');
+    const leftBonusEl = document.getElementById('leftBonus');
+    const rightBonusEl = document.getElementById('rightBonus');
+
+    const leftPlus = document.getElementById('leftPlus');
+    const leftPlusBonus = document.getElementById('leftPlusBonus');
+    const rightPlus = document.getElementById('rightPlus');
+    const rightPlusBonus = document.getElementById('rightPlusBonus');
+    const resetSet = document.getElementById('resetSet');
+    const endSet = document.getElementById('endSet');
+
+    const observerNameEl = document.getElementById('observerName');
+
+    const prevMatchBtn = document.getElementById('prevMatch');
+    const nextMatchBtn = document.getElementById('nextMatch');
+
+    const guessAselect = document.getElementById('guessAselect');
+    const guessBselect = document.getElementById('guessBselect');
+    const submitGuesses = document.getElementById('submitGuesses');
+    const devineurGuessName = document.getElementById('devineurGuessName');
+    const guessAname = document.getElementById('guessAname');
+    const guessBname = document.getElementById('guessBname');
+
+    const matchSummaryDiv = matchSummary;
+    const leaderboardTbody = document.querySelector('#leaderboard tbody');
+
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+    // session data
+    let players = [ {name:'Joueur 1'}, {name:'Joueur 2'}, {name:'Joueur 3'} ];
+    // per-player totals and breakdowns
+    // matchPoints: sum, matchPointsBreakdown: array of points per match participated
+    // bonusFromStrategy: sum, bonusFromStrategyBreakdown: per match
+    // bonusFromGuess: sum, bonusFromGuessBreakdown: per match
+    let totals = [
+      {matchPoints:0, matchPointsBreakdown:[], bonusFromStrategy:0, bonusFromStrategyBreakdown:[], bonusFromGuess:0, bonusFromGuessBreakdown:[]},
+      {matchPoints:0, matchPointsBreakdown:[], bonusFromStrategy:0, bonusFromStrategyBreakdown:[], bonusFromGuess:0, bonusFromGuessBreakdown:[]},
+      {matchPoints:0, matchPointsBreakdown:[], bonusFromStrategy:0, bonusFromStrategyBreakdown:[], bonusFromGuess:0, bonusFromGuessBreakdown:[]}
+    ];
+
+    // Matches: 3 matches where deviner rotates 0,1,2
+    let currentMatch = 0; // 0..2
+    let matchData = []; // per match object to store choices, set results, etc.
+
+    // set runtime state
+    let setNumber = 1;
+    let setState = null; // leftIdx,rightIdx,leftScore,rightScore,leftBonus,rightBonus,observerIdx
+
+    function resetSession(){
+      players = [ {name:p1nameInput.value||'Joueur 1'}, {name:p2nameInput.value||'Joueur 2'}, {name:p3nameInput.value||'Joueur 3'} ];
+      totals = [
+        {matchPoints:0, matchPointsBreakdown:[], bonusFromStrategy:0, bonusFromStrategyBreakdown:[], bonusFromGuess:0, bonusFromGuessBreakdown:[]},
+        {matchPoints:0, matchPointsBreakdown:[], bonusFromStrategy:0, bonusFromStrategyBreakdown:[], bonusFromGuess:0, bonusFromGuessBreakdown:[]},
+        {matchPoints:0, matchPointsBreakdown:[], bonusFromStrategy:0, bonusFromStrategyBreakdown:[], bonusFromGuess:0, bonusFromGuessBreakdown:[]}
+      ];
+      matchData = [null,null,null];
+      currentMatch = 0;
+      prepareMatchData();
+    }
+
+    function prepareMatchData(){
+      for(let i=0;i<3;i++){
+        matchData[i] = {
+          dev:i,
+          opponents: getOpponents(i),
+          choices: {}, // choices[opIndex] = strategyIndex
+          sets: [ null, null ], // each set: {leftIdx,rightIdx,leftScore,rightScore,leftBonus,rightBonus,observerIdx}
+          guesses: { }, // guesses by dev: guesses[opIndex]=strategyIndex
+          computed:false
+        };
+      }
+    }
+
+    function getOpponents(dev){
+      const arr = [0,1,2].filter(x=>x!==dev);
+      return {A:arr[0], B:arr[1]};
+    }
+
+    function showSetup(hide=false){ setupSection.style.display = hide? 'none':'' }
+    function showFlow(show=true){ flowSection.classList.toggle('hidden', !show) }
+    function showFinal(show=true){ finalSection.classList.toggle('hidden', !show) }
+
+    // start session
+    startBtn.addEventListener('click', ()=>{
+      resetSession();
+      showSetup(true);
+      showFlow(true);
+      renderMatch();
+    });
+
+    // render strategies choices buttons per opponent
+    function renderStrategyButtons(container, opIndex, matchIdx){
+      container.innerHTML = '';
+      STRATEGIES.forEach((s,si)=>{
+        const btn = document.createElement('button');
+        btn.className = 'strategy';
+        btn.innerHTML = `<div style='font-weight:600'>${s}</div><div class='small'>Choisir</div>`;
+        btn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          // set choice in matchData
+          matchData[matchIdx].choices[opIndex] = si;
+          // show confirmation toast (simple alert-styled modal)
+          showTemporaryConfirm(container, 'Stratégie enregistrée ✔️');
+          // indicate selection visually
+          Array.from(container.children).forEach(c=>c.style.opacity = '0.45');
+          btn.style.opacity = '1';
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function showTemporaryConfirm(container, text){
+      const overlay = document.createElement('div');
+      overlay.style.position = 'absolute';
+      overlay.style.left = '0'; overlay.style.top='0'; overlay.style.right='0'; overlay.style.bottom='0';
+      overlay.style.display='flex'; overlay.style.alignItems='center'; overlay.style.justifyContent='center';
+      overlay.innerHTML = `<div style='background:rgba(6,182,212,0.12);padding:10px;border-radius:10px;border:1px solid rgba(6,182,212,0.18)'>${text}</div>`;
+      container.style.position='relative';
+      container.appendChild(overlay);
+      setTimeout(()=>{ if(overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);}, 900);
+    }
+
+    // cancel buttons
+    cancelA.addEventListener('click', ()=>{
+      const md = matchData[currentMatch];
+      delete md.choices[md.opponents.A];
+      opAChoices.querySelectorAll('.strategy').forEach(el=>el.style.opacity='1');
+    });
+    cancelB.addEventListener('click', ()=>{
+      const md = matchData[currentMatch];
+      delete md.choices[md.opponents.B];
+      opBChoices.querySelectorAll('.strategy').forEach(el=>el.style.opacity='1');
+    });
+
+    // skip / confirm choices (move to playing)
+    skipChoices.addEventListener('click', ()=>{
+      const md = matchData[currentMatch];
+      if(md.choices[md.opponents.A]===undefined || md.choices[md.opponents.B]===undefined){
+        if(!confirm('Une ou plusieurs stratégies n\'ont pas été choisies. Continuer ?')) return;
+      }
+      // proceed to first set
+      startSet(1);
+    });
+
+    // --- Set play handling ---
+    function startSet(n){
+      setNumber = n;
+      chooseStage.classList.add('hidden');
+      playStage.classList.remove('hidden');
+      guessStage.classList.add('hidden');
+      matchSummaryDiv.classList.add('hidden');
+
+      const md = matchData[currentMatch];
+      const dev = md.dev;
+      if(n===1){
+        setState = createSetState(dev, md.opponents.A, md.opponents.B);
+      } else {
+        setState = createSetState(dev, md.opponents.B, md.opponents.A);
+      }
+      renderSet();
+    }
+
+    function createSetState(leftIdx, rightIdx, observerIdx){
+      return {leftIdx,rightIdx,observerIdx,leftScore:0,rightScore:0,leftBonus:0,rightBonus:0};
+    }
+
+    function renderSet(){
+      leftNameEl.textContent = players[setState.leftIdx].name;
+      rightNameEl.textContent = players[setState.rightIdx].name;
+      leftScoreEl.textContent = setState.leftScore;
+      rightScoreEl.textContent = setState.rightScore;
+      leftBonusEl.textContent = setState.leftBonus;
+      rightBonusEl.textContent = setState.rightBonus;
+      observerNameEl.textContent = players[setState.observerIdx].name;
+      setTitle.textContent = `Set ${setNumber} — ${players[setState.leftIdx].name} vs ${players[setState.rightIdx].name}`;
+
+      // Remove (hide) the "+1 + bonus" button entirely when that side is the devineur:
+      const md = matchData[currentMatch];
+      const devIdx = md.dev;
+      // left side
+      if(setState.leftIdx === devIdx){
+        leftPlusBonus.style.display = 'none';
+      } else {
+        leftPlusBonus.style.display = '';
+      }
+      // right side
+      if(setState.rightIdx === devIdx){
+        rightPlusBonus.style.display = 'none';
+      } else {
+        rightPlusBonus.style.display = '';
+      }
+    }
+
+    leftPlus.addEventListener('click', ()=>{ setState.leftScore++; checkSetEnd(); renderSet(); });
+    rightPlus.addEventListener('click', ()=>{ setState.rightScore++; checkSetEnd(); renderSet(); });
+    leftPlusBonus.addEventListener('click', ()=>{ setState.leftScore++; setState.leftBonus++; renderSet(); checkSetEnd(); });
+    rightPlusBonus.addEventListener('click', ()=>{ setState.rightScore++; setState.rightBonus++; renderSet(); checkSetEnd(); });
+
+    resetSet.addEventListener('click', ()=>{
+      if(confirm('Réinitialiser le set ?')){
+        setState.leftScore=0; setState.rightScore=0; setState.leftBonus=0; setState.rightBonus=0; renderSet();
+      }
+    });
+    endSet.addEventListener('click', ()=>{ if(confirm('Forcer la fin du set ?')) finishSet(); });
+
+    function checkSetEnd(){
+      if(setState.leftScore>=11 || setState.rightScore>=11){
+        finishSet();
+      }
+    }
+
+    function finishSet(){
+      const md = matchData[currentMatch];
+      const sIdx = setNumber - 1;
+      md.sets[sIdx] = { ...setState };
+      // NOTE: we no longer add per-set bonus directly to totals here.
+      // Per-match bonusFromStrategy will be computed once when the match is finalized (submitGuesses).
+      if(setNumber===2){
+        playStage.classList.add('hidden');
+        prepareGuessStage();
+      } else {
+        startSet(2);
+      }
+    }
+
+    // --- Guess stage ---
+    function prepareGuessStage(){
+      const md = matchData[currentMatch];
+      guessStage.classList.remove('hidden');
+      populateStrategySelect(guessAselect);
+      populateStrategySelect(guessBselect);
+      devineurGuessName.textContent = players[md.dev].name;
+      guessAname.textContent = players[md.opponents.A].name;
+      guessBname.textContent = players[md.opponents.B].name;
+    }
+
+    function populateStrategySelect(sel){
+      sel.innerHTML = '<option value="">-- Choisir --</option>';
+      STRATEGIES.forEach((s,si)=>{ const o = document.createElement('option'); o.value=si; o.textContent=s; sel.appendChild(o); });
+    }
+
+    submitGuesses.addEventListener('click', ()=>{
+      const md = matchData[currentMatch];
+      const gA = guessAselect.value === '' ? null : parseInt(guessAselect.value);
+      const gB = guessBselect.value === '' ? null : parseInt(guessBselect.value);
+      md.guesses[md.opponents.A] = gA;
+      md.guesses[md.opponents.B] = gB;
+
+      // compute bonuses for guesses (dev only)
+      let devBonus = 0;
+      const actualA = md.choices[md.opponents.A] === undefined ? null : md.choices[md.opponents.A];
+      const actualB = md.choices[md.opponents.B] === undefined ? null : md.choices[md.opponents.B];
+      if(gA !== null && actualA!==null && gA===actualA) devBonus += 3;
+      if(gB !== null && actualB!==null && gB===actualB) devBonus += 3;
+      // add to totals and breakdown for dev
+      totals[md.dev].bonusFromGuess += devBonus;
+      totals[md.dev].bonusFromGuessBreakdown.push(devBonus);
+
+      // compute per-player bonusFromStrategy for THIS match by summing bonuses in the two sets
+      const playersInMatch = [md.dev, md.opponents.A, md.opponents.B];
+      const bonusesThisMatch = { };
+      playersInMatch.forEach(idx => bonusesThisMatch[idx] = 0);
+      md.sets.forEach((s)=>{
+        if(!s) return;
+        // left player
+        bonusesThisMatch[s.leftIdx] = (bonusesThisMatch[s.leftIdx]||0) + (s.leftBonus||0);
+        // right player
+        bonusesThisMatch[s.rightIdx] = (bonusesThisMatch[s.rightIdx]||0) + (s.rightBonus||0);
+      });
+      // add to totals and breakdowns
+      playersInMatch.forEach(idx=>{
+        const val = bonusesThisMatch[idx] || 0;
+        totals[idx].bonusFromStrategy += val;
+        totals[idx].bonusFromStrategyBreakdown.push(val);
+      });
+
+      // compute match points for dev (based on sets won)
+      let setsWon = 0;
+      md.sets.forEach((s)=>{
+        if(!s) return;
+        const devIsLeft = (s.leftIdx === md.dev);
+        const devScore = devIsLeft ? s.leftScore : s.rightScore;
+        const oppScore = devIsLeft ? s.rightScore : s.leftScore;
+        if(devScore > oppScore) setsWon++;
+      });
+      let matchPointsDev = (setsWon===2?3: (setsWon===1?2:1));
+      totals[md.dev].matchPoints += matchPointsDev;
+      totals[md.dev].matchPointsBreakdown.push(matchPointsDev);
+
+      // ALSO award match points to the two opponents based on the sets they won in this match.
+      const oppA = md.opponents.A;
+      const oppB = md.opponents.B;
+      let oppASetsWon = 0, oppBSetsWon = 0;
+      md.sets.forEach((s) => {
+        if(!s) return;
+        // opponent A
+        if(s.leftIdx === oppA || s.rightIdx === oppA){
+          const oppScore = (s.leftIdx === oppA) ? s.leftScore : s.rightScore;
+          const otherScore = (s.leftIdx === oppA) ? s.rightScore : s.leftScore;
+          if(oppScore > otherScore) oppASetsWon++;
+        }
+        // opponent B
+        if(s.leftIdx === oppB || s.rightIdx === oppB){
+          const oppScore = (s.leftIdx === oppB) ? s.leftScore : s.rightScore;
+          const otherScore = (s.leftIdx === oppB) ? s.rightScore : s.leftScore;
+          if(oppScore > otherScore) oppBSetsWon++;
+        }
+      });
+      const oppAPoints = (oppASetsWon === 2 ? 3 : (oppASetsWon === 1 ? 2 : 1)); // handle both sets possibility defensively
+      const oppBPoints = (oppBSetsWon === 2 ? 3 : (oppBSetsWon === 1 ? 2 : 1));
+      totals[oppA].matchPoints += oppAPoints;
+      totals[oppB].matchPoints += oppBPoints;
+      totals[oppA].matchPointsBreakdown.push(oppAPoints);
+      totals[oppB].matchPointsBreakdown.push(oppBPoints);
+
+      // For players who are not present in this match (none here, each match involves all 3),
+      // we ensure each player's breakdown will have exactly 3 entries after all matches.
+      // prepare match summary display
+      showMatchSummary();
+      md.computed = true;
+    });
+
+    function showMatchSummary(){
+      const md = matchData[currentMatch];
+      matchSummaryDiv.classList.remove('hidden');
+      matchSummaryDiv.innerHTML = `<h4>Récapitulatif — ${players[md.dev].name}</h4>`;
+      // show sets
+      const table = document.createElement('table');
+      table.innerHTML = `<thead><tr><th>Set</th><th>Match</th><th>Score</th><th>Bonus A</th><th>Bonus B</th></tr></thead>`;
+      const tbody = document.createElement('tbody');
+      md.sets.forEach((s,i)=>{
+        if(!s) return;
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${i+1}</td><td>${players[s.leftIdx].name} vs ${players[s.rightIdx].name}</td><td>${s.leftScore} - ${s.rightScore}</td><td>${s.leftBonus}</td><td>${s.rightBonus}</td>`;
+        tbody.appendChild(row);
+      });
+      table.appendChild(tbody);
+      matchSummaryDiv.appendChild(table);
+
+      // show choices revealed
+      const choicesDiv = document.createElement('div');
+      choicesDiv.style.marginTop='8px';
+      choicesDiv.innerHTML = `<div class='small'>Stratégies jouées :</div>`;
+      const list = document.createElement('ul');
+      const mdA = md.choices[md.opponents.A]===undefined? '—': STRATEGIES[md.choices[md.opponents.A]];
+      const mdB = md.choices[md.opponents.B]===undefined? '—': STRATEGIES[md.choices[md.opponents.B]];
+      list.innerHTML = `<li>${players[md.opponents.A].name} : ${mdA}</li><li>${players[md.opponents.B].name} : ${mdB}</li>`;
+      choicesDiv.appendChild(list);
+
+      // show points awarded this match (summary)
+      const p = document.createElement('div');
+      const dev = md.dev;
+      // compute dev guess correct count for display (0/1/2)
+      const gA = md.guesses[md.opponents.A];
+      const gB = md.guesses[md.opponents.B];
+      let devGuessCorrect = 0;
+      if(gA!==null && md.choices[md.opponents.A]!==undefined && gA===md.choices[md.opponents.A]) devGuessCorrect++;
+      if(gB!==null && md.choices[md.opponents.B]!==undefined && gB===md.choices[md.opponents.B]) devGuessCorrect++;
+      // compute sets won again
+      let setsWon = 0;
+      md.sets.forEach((s)=>{
+        if(!s) return;
+        const devIsLeft = (s.leftIdx===md.dev);
+        const devScore = devIsLeft? s.leftScore: s.rightScore;
+        const oppScore = devIsLeft? s.rightScore: s.leftScore;
+        if(devScore>oppScore) setsWon++;
+      });
+      let matchPoints = (setsWon===2?3: (setsWon===1?2:1));
+      p.innerHTML = `<div style='margin-top:10px'>Sets gagnés: ${setsWon} — Points de match attribués au devineur: ${matchPoints}<br/>Bonus devinettes cette rencontre: ${totals[dev].bonusFromGuessBreakdown.slice(-1)[0]||0}<br/>Bonus stratégie cette rencontre: ${totals[dev].bonusFromStrategyBreakdown.slice(-1)[0]||0}</div>`;
+      matchSummaryDiv.appendChild(choicesDiv);
+      matchSummaryDiv.appendChild(p);
+    }
+
+    // navigate matches
+    nextMatchBtn.addEventListener('click', ()=>{
+      if(!matchData[currentMatch].computed){
+        alert('Terminez la rencontre actuelle (validez les devinettes) avant de passer à la suivante.');
+        return;
+      }
+      if(currentMatch < 2){ currentMatch++; renderMatch(); }
+      else { endSession(); }
+    });
+    prevMatchBtn.addEventListener('click', ()=>{
+      if(currentMatch>0){ currentMatch--; renderMatch(); }
+    });
+
+    function renderMatch(){
+      const md = matchData[currentMatch];
+      matchIndexEl.textContent = (currentMatch+1);
+      devNameEl.textContent = players[md.dev].name;
+      nextDevEl.textContent = players[(md.dev+1)%3].name;
+      opAname.textContent = players[md.opponents.A].name;
+      opBname.textContent = players[md.opponents.B].name;
+      renderStrategyButtons(opAChoices, md.opponents.A, currentMatch);
+      renderStrategyButtons(opBChoices, md.opponents.B, currentMatch);
+      opAChoices.querySelectorAll('.strategy').forEach(el=>el.style.opacity='1');
+      opBChoices.querySelectorAll('.strategy').forEach(el=>el.style.opacity='1');
+
+      chooseStage.classList.remove('hidden'); playStage.classList.add('hidden'); guessStage.classList.add('hidden'); matchSummaryDiv.classList.add('hidden');
+      prevMatchBtn.disabled = (currentMatch===0);
+    }
+
+    function endSession(){
+      showFlow(false);
+      showFinal(true);
+      renderLeaderboard();
+    }
+
+    function formatBreakdown(arr){
+      // format array like "3 + 3 + 1 = 7"
+      if(!arr || arr.length===0) return '0';
+      const parts = arr.map(n=>String(n));
+      const sum = arr.reduce((a,b)=>a+(b||0),0);
+      return parts.join(' + ') + ' = ' + sum;
+    }
+
+    function renderLeaderboard(){
+      leaderboardTbody.innerHTML='';
+      for(let i=0;i<3;i++){
+        const tot = totals[i];
+        // ensure breakdown arrays have length 3: if shorter, append zeros for matches not yet played
+        const mpb = tot.matchPointsBreakdown.slice();
+        const bsb = tot.bonusFromStrategyBreakdown.slice();
+        const gbb = tot.bonusFromGuessBreakdown.slice();
+        // pad to 3 entries
+        while(mpb.length < 3) mpb.push(0);
+        while(bsb.length < 3) bsb.push(0);
+        while(gbb.length < 3) gbb.push(0);
+
+        const totalPoints = (tot.matchPoints||0) + (tot.bonusFromStrategy||0) + (tot.bonusFromGuess||0);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${players[i].name}</td>
+                        <td>${formatBreakdown(mpb)}</td>
+                        <td>${formatBreakdown(bsb)}</td>
+                        <td>${formatBreakdown(gbb)}</td>
+                        <td>${totalPoints}</td>`;
+        leaderboardTbody.appendChild(tr);
+      }
+    }
+
+    // export PDF (simple)
+    exportPdfBtn.addEventListener('click', async ()=>{
+      // build simple text content from table
+      const pdfPlayers = [p1nameInput.value||'Joueur 1', p2nameInput.value||'Joueur 2', p3nameInput.value||'Joueur 3'];
+      const filename = `${pdfPlayers[0]} - ${pdfPlayers[1]} - ${pdfPlayers[2]}.pdf`;
+
+      // use jsPDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({unit:'pt', format:'a4'});
+      let y = 40;
+      doc.setFontSize(14);
+      doc.text('Classement final — Évaluation stratégies', 40, y);
+      y += 20;
+      doc.setFontSize(11);
+
+      // Header row
+      const headers = ['Joueur', 'Points match', 'Bonus stratégie', 'Bonus devinettes', 'Total'];
+      const colX = [40, 200, 350, 500, 640];
+      headers.forEach((h, idx) => doc.text(String(h), colX[idx], y));
+      y += 18;
+
+      // Rows
+      for(let i=0;i<3;i++){
+        const tot = totals[i];
+        const mpb = tot.matchPointsBreakdown.slice(); while(mpb.length<3) mpb.push(0);
+        const bsb = tot.bonusFromStrategyBreakdown.slice(); while(bsb.length<3) bsb.push(0);
+        const gbb = tot.bonusFromGuessBreakdown.slice(); while(gbb.length<3) gbb.push(0);
+        const totalPoints = (tot.matchPoints||0) + (tot.bonusFromStrategy||0) + (tot.bonusFromGuess||0);
+
+        doc.text(String(players[i].name), colX[0], y);
+        doc.text(formatBreakdown(mpb), colX[1], y);
+        doc.text(formatBreakdown(bsb), colX[2], y);
+        doc.text(formatBreakdown(gbb), colX[3], y);
+        doc.text(String(totalPoints), colX[4], y);
+        y += 18;
+        if(y > 760){ doc.addPage(); y = 40; }
+      }
+
+      doc.save(filename);
+    });
+
+    document.getElementById('restart').addEventListener('click', ()=>{ location.reload(); });
+
+    // initial UI: hide flow and final
+    showFlow(false); showFinal(false);
+  </script>
+
+<script>
+  // Ajout d'un gestionnaire pour tous les boutons FERMER (si présents)
+  const closeButtons = document.querySelectorAll('.close-modal, #closeStratModal');
+  closeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modal = document.getElementById('strategiesModal');
+      if(modal) modal.style.display = 'none';
+    });
+  });
+</script>
+</body>
+</html>
