@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>StratBadEPS - Version Finale</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--white:#e6eef6;--danger:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, system-ui, -apple-system, sans-serif;background:linear-gradient(180deg,#071029 0%, #0e1b2a 100%);color:var(--white);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px}
+    .app{width:100%;max-width:980px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    h1{font-size:20px;margin:0}
+    .card{background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6);position:relative}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type="text"]{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:var(--white)}
+    .btn{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:#012;cursor:pointer;font-weight:600; transition: scale 0.1s}
+    .btn:active{scale:0.95}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--white)}
+    .btn.danger{background:var(--danger);color:white}
+    /* Style du bouton Aide agrandi */
+    .btn.help-large{padding:8px 20px; font-size:14px; border: 2px solid var(--accent); color: var(--accent); margin-bottom:10px}
+    .strategies{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:8px}
+    .hidden{display:none}
+    .scoreboard{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .panel{flex:1;min-width:200px}
+    .score{font-size:40px;font-weight:700;margin:10px 0}
+    .controls{display:flex;flex-direction:column;gap:6px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:left;font-size:13px}
+    th{color:var(--muted);font-weight:normal}
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+    .modal-content{background:var(--bg);padding:20px;border-radius:15px;max-width:600px;border:1px solid var(--accent);box-shadow:0 0 30px rgba(6,182,212,0.3)}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="card" style="width:100%;display:flex;align-items:center;gap:12px">
+        <div style="width:34px;height:34px;background:var(--accent);border-radius:8px"></div>
+        <div>
+          <h1>StratBadEPS</h1>
+          <div style="font-size:12px;color:var(--muted)">Évaluation EPS - Mode Tableur</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="card" id="mainCard">
+      <section id="setup">
+        <label>Nom des joueurs :</label>
+        <div style="display:grid;gap:8px;margin-bottom:15px">
+          <input id="p1name" type="text" value="Joueur 1" />
+          <input id="p2name" type="text" value="Joueur 2" />
+          <input id="p3name" type="text" value="Joueur 3" />
+        </div>
+        <button class="btn" id="startBtn" style="width:100%">Démarrer la session</button>
+      </section>
+
+      <section id="flow" class="hidden">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px">
+          <span>Match <b id="matchIndex">1</b>/3</span>
+          <span>Devineur : <b id="devName"></b></span>
+        </div>
+
+        <div id="chooseStage" class="card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px">
+            <p style="margin:0; font-weight:bold; font-size:1.1rem">Choix des stratégies</p>
+            <button class="btn ghost help-large explainBtn">Besoin d'aide ?</button>
+          </div>
+          <div id="opAContainer">
+            <label id="opAnameLabel"></label>
+            <div id="opAChoices" class="strategies"></div>
+          </div>
+          <div id="opBContainer" style="margin-top:15px">
+            <label id="opBnameLabel"></label>
+            <div id="opBChoices" class="strategies"></div>
+          </div>
+          <button class="btn ghost" id="skipChoices" style="width:100%;margin-top:20px; border-color:var(--accent)">Les choix sont faits : Lancer le match</button>
+        </div>
+
+        <div id="playStage" class="hidden">
+          <h3 id="setTitle" style="margin:0 0 10px 0">Set 1</h3>
+          <div class="scoreboard">
+            <div class="panel card" style="text-align:center">
+              <div id="leftName" style="font-weight:700">-</div>
+              <div class="score" id="leftScore">0</div>
+              <div class="controls">
+                <button class="btn" id="leftPlus">+1 Pt</button>
+                <button class="btn ghost" id="leftPlusBonus">+1 Pt + Tactique</button>
+              </div>
+            </div>
+            <div class="panel card" style="text-align:center">
+              <div id="rightName" style="font-weight:700">-</div>
+              <div class="score" id="rightScore">0</div>
+              <div class="controls">
+                <button class="btn" id="rightPlus">+1 Pt</button>
+                <button class="btn ghost" id="rightPlusBonus">+1 Pt + Tactique</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:15px;display:flex;gap:8px">
+            <button class="btn danger" id="undoBtn" style="flex:1">↩ Annuler action</button>
+            <button class="btn ghost" id="endSet">Finir set</button>
+          </div>
+        </div>
+
+        <div id="guessStage" class="hidden card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px">
+            <h3 style="margin:0">Phase de devinettes</h3>
+            <button class="btn ghost help-large explainBtn">Besoin d'aide ?</button>
+          </div>
+          <div style="margin-bottom:10px">
+            <label id="guessAnameLabel"></label>
+            <select id="guessAselect" style="width:100%;padding:12px;border-radius:8px;background:#000;color:#fff;border:1px solid var(--muted)"></select>
+          </div>
+          <div style="margin-top:15px">
+            <label id="guessBnameLabel"></label>
+            <select id="guessBselect" style="width:100%;padding:12px;border-radius:8px;background:#000;color:#fff;border:1px solid var(--muted)"></select>
+          </div>
+          <button class="btn" id="submitGuesses" style="width:100%;margin-top:25px">Confirmer les devinettes</button>
+        </div>
+
+        <div id="matchSummary" class="hidden card" style="margin-top:15px"></div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:15px">
+          <button class="btn hidden" id="nextMatch">Match Suivant</button>
+        </div>
+      </section>
+
+      <section id="final" class="hidden">
+        <h3>Classement Final Cumulé</h3>
+        <table id="leaderboard">
+          <thead><tr><th>Joueur</th><th>Matchs</th><th>Tactique</th><th>Dev.</th><th>Total</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div style="display:flex;gap:8px;margin-top:20px">
+          <button class="btn" id="exportCsvBtn" style="flex:1">Exporter CSV (Excel)</button>
+          <button class="btn ghost" id="restart">Recommencer</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalHelp" class="modal">
+    <div class="modal-content">
+      <h3 style="margin-top:0">Aide Stratégies</h3>
+      <ul style="font-size:14px; line-height:1.6; padding-left:20px">
+        <li><b>Alterner largeur :</b> Viser les couloirs latéraux pour faire courir son adversaire de gauche à droite.</li>
+        <li><b>Alterner profondeur :</b> Utiliser le dégagé de fond de court et/ou le lob en alternance avec les amortis pour faire courir son adversaire d'avant en arrière.</li>
+        <li><b>Fixer fond -> amorti :</b> Faire reculer l'adversaire au fond de court grâce à des dégagés pour conclure sur un amorti.</li>
+        <li><b>Fixer amorti -> lober :</b> Attirer l'adversaire au filet grâce à des amortis pour ensuite conclure le point sur un lob.</li>
+        <li><b>Viser les 4 coins :</b> Envoyer les volants de façon à viser les 4 coins du terrain en utilisant des dégagés, des lobs et/ou des amortis croisés.</li>
+        <li><b>Fixer sur son revers :</b> Viser le côté faible de l'adversaire pour le mettre en difficulté et obtenir des volants favorables.</li>
+        <li><b>Accélérer le jeu :</b> Utiliser des Smashs, des drives et des kills pour mettre l'adversaire sous pression temporelle.</li>
+      </ul>
+      <button class="btn" id="closeHelp" style="width:100%; margin-top:10px">Fermer</button>
+    </div>
+  </div>
+
+  <script>
+    const STRATEGIES = ['Alterner largeur', 'Alterner profondeur', 'Fixer fond -> amorti', 'Fixer amorti -> lober', 'Viser les 4 coins', 'Fixer sur son revers', 'Accélérer le jeu'];
+    let players = [], totals = [], matchData = [], currentMatch = 0, setNumber = 1, setState = null, scoreHistory = [];
+
+    document.querySelectorAll('.explainBtn').forEach(btn => {
+      btn.onclick = () => document.getElementById('modalHelp').style.display='flex';
+    });
+    document.getElementById('closeHelp').onclick = () => document.getElementById('modalHelp').style.display='none';
+
+    document.getElementById('startBtn').onclick = () => {
+      players = [
+        {name: document.getElementById('p1name').value || 'Joueur 1'},
+        {name: document.getElementById('p2name').value || 'Joueur 2'},
+        {name: document.getElementById('p3name').value || 'Joueur 3'}
+      ];
+      totals = players.map(() => ({ matchPoints: 0, strategyBonus: 0, guessBonus: 0 }));
+      matchData = [0, 1, 2].map(devIdx => {
+        const opps = [0, 1, 2].filter(i => i !== devIdx);
+        return { dev: devIdx, oppA: opps[0], oppB: opps[1], choices: {}, sets: [], computed: false };
+      });
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('flow').classList.remove('hidden');
+      renderMatch();
+    };
+
+    function renderMatch() {
+      const md = matchData[currentMatch];
+      document.getElementById('matchIndex').textContent = currentMatch + 1;
+      document.getElementById('devName').textContent = players[md.dev].name;
+      document.getElementById('opAnameLabel').textContent = players[md.oppA].name;
+      document.getElementById('opBnameLabel').textContent = players[md.oppB].name;
+      renderStrategyBtns(document.getElementById('opAChoices'), md.oppA);
+      renderStrategyBtns(document.getElementById('opBChoices'), md.oppB);
+      ['chooseStage','playStage','guessStage','matchSummary'].forEach(s => document.getElementById(s).classList.add('hidden'));
+      document.getElementById('chooseStage').classList.remove('hidden');
+      document.getElementById('nextMatch').classList.add('hidden');
+    }
+
+    function renderStrategyBtns(container, opIdx) {
+      container.innerHTML = '';
+      STRATEGIES.forEach((s, i) => {
+        const b = document.createElement('button');
+        b.className = 'btn ghost';
+        b.style.fontSize = '12px';
+        b.textContent = s;
+        b.onclick = () => {
+          matchData[currentMatch].choices[opIdx] = i;
+          Array.from(container.children).forEach(btn => btn.style.background = 'transparent');
+          b.style.background = 'var(--accent)';
+          b.style.color = '#012';
+        };
+        container.appendChild(b);
+      });
+    }
+
+    document.getElementById('skipChoices').onclick = () => startSet(1);
+
+    function startSet(n) {
+      setNumber = n; const md = matchData[currentMatch]; scoreHistory = [];
+      setState = { left: n === 1 ? md.dev : md.oppB, right: n === 1 ? md.oppA : md.dev, lScore: 0, rScore: 0, lBonus: 0, rBonus: 0 };
+      document.getElementById('chooseStage').classList.add('hidden');
+      document.getElementById('playStage').classList.remove('hidden');
+      renderSetUI();
+    }
+
+    function renderSetUI() {
+      document.getElementById('setTitle').textContent = `Set ${setNumber}`;
+      document.getElementById('leftName').textContent = players[setState.left].name;
+      document.getElementById('rightName').textContent = players[setState.right].name;
+      document.getElementById('leftScore').textContent = setState.lScore;
+      document.getElementById('rightScore').textContent = setState.rScore;
+      const md = matchData[currentMatch];
+      document.getElementById('leftPlusBonus').style.display = setState.left === md.dev ? 'none' : 'block';
+      document.getElementById('rightPlusBonus').style.display = setState.right === md.dev ? 'none' : 'block';
+    }
+
+    document.getElementById('undoBtn').onclick = () => {
+      if(scoreHistory.length > 0) { setState = JSON.parse(scoreHistory.pop()); renderSetUI(); }
+    };
+
+    function save() { scoreHistory.push(JSON.stringify(setState)); }
+    document.getElementById('leftPlus').onclick = () => { save(); setState.lScore++; renderSetUI(); checkEnd(); };
+    document.getElementById('rightPlus').onclick = () => { save(); setState.rScore++; renderSetUI(); checkEnd(); };
+    document.getElementById('leftPlusBonus').onclick = () => { save(); setState.lScore++; setState.lBonus++; renderSetUI(); checkEnd(); };
+    document.getElementById('rightPlusBonus').onclick = () => { save(); setState.rScore++; setState.rBonus++; renderSetUI(); checkEnd(); };
+    document.getElementById('endSet').onclick = () => endSet();
+
+    function checkEnd() { if(setState.lScore >= 11 || setState.rScore >= 11) endSet(); }
+    function endSet() {
+      matchData[currentMatch].sets.push({...setState});
+      if(setNumber < 2) startSet(2);
+      else showGuessStage();
+    }
+
+    function showGuessStage() {
+      document.getElementById('playStage').classList.add('hidden');
+      document.getElementById('guessStage').classList.remove('hidden');
+      const md = matchData[currentMatch];
+      document.getElementById('guessAnameLabel').textContent = `Stratégie de ${players[md.oppA].name} :`;
+      document.getElementById('guessBnameLabel').textContent = `Stratégie de ${players[md.oppB].name} :`;
+      [document.getElementById('guessAselect'), document.getElementById('guessBselect')].forEach(sel => {
+        sel.innerHTML = '<option value="">-- Choisir la stratégie observée --</option>';
+        STRATEGIES.forEach((s, i) => sel.innerHTML += `<option value="${i}">${s}</option>`);
+      });
+    }
+
+    document.getElementById('submitGuesses').onclick = () => {
+      const md = matchData[currentMatch];
+      const gA = parseInt(document.getElementById('guessAselect').value);
+      const gB = parseInt(document.getElementById('guessBselect').value);
+      if(gA === md.choices[md.oppA]) totals[md.dev].guessBonus += 3;
+      if(gB === md.choices[md.oppB]) totals[md.dev].guessBonus += 3;
+      md.sets.forEach(s => {
+        if(s.lScore > s.rScore) { totals[s.left].matchPoints += 3; totals[s.right].matchPoints += 1; }
+        else { totals[s.right].matchPoints += 3; totals[s.left].matchPoints += 1; }
+        totals[s.left].strategyBonus += s.lBonus;
+        totals[s.right].strategyBonus += s.rBonus;
+      });
+      showSummary();
+    };
+
+    function showSummary() {
+      document.getElementById('guessStage').classList.add('hidden');
+      const div = document.getElementById('matchSummary'); div.classList.remove('hidden');
+      let html = `<h3>Tableau Cumulatif (Match 1-${currentMatch+1})</h3><table><tr><th>Joueur</th><th>Matchs</th><th>Tactique</th><th>Dev.</th><th>TOTAL</th></tr>`;
+      players.forEach((p, i) => {
+        const t = totals[i];
+        html += `<tr><td><b>${p.name}</b></td><td>${t.matchPoints}</td><td>${t.strategyBonus}</td><td>${t.guessBonus}</td><td><b>${t.matchPoints + t.strategyBonus + t.guessBonus}</b></td></tr>`;
+      });
+      div.innerHTML = html + `</table>`;
+      document.getElementById('nextMatch').classList.remove('hidden');
+    }
+
+    document.getElementById('nextMatch').onclick = () => {
+      if(currentMatch < 2) { currentMatch++; renderMatch(); }
+      else showFinal();
+    };
+
+    function showFinal() {
+      document.getElementById('flow').classList.add('hidden');
+      document.getElementById('final').classList.remove('hidden');
+      const tbody = document.querySelector('#leaderboard tbody'); tbody.innerHTML = '';
+      players.forEach((p, i) => {
+        const t = totals[i];
+        tbody.innerHTML += `<tr><td>${p.name}</td><td>${t.matchPoints}</td><td>${t.strategyBonus}</td><td>${t.guessBonus}</td><td><b>${t.matchPoints + t.strategyBonus + t.guessBonus}</b></td></tr>`;
+      });
+    }
+
+    document.getElementById('exportCsvBtn').onclick = () => {
+      let csvContent = "\uFEFFJoueur;Points Matchs;Points Tactique;Points Devinettes;Score Total\n";
+      players.forEach((p, i) => {
+        const t = totals[i];
+        csvContent += `${p.name};${t.matchPoints};${t.strategyBonus};${t.guessBonus};${t.matchPoints + t.strategyBonus + t.guessBonus}\n`;
+      });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `resultats_bad_eps.csv`;
+      link.click();
+    };
+
+    document.getElementById('restart').onclick = () => location.reload();
+  </script>
+</body>
+</html>
