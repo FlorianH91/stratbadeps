@@ -3,342 +3,334 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>StratBadEPS - v2.7 Officiel</title>
+  <title>StratBadEPS - v2.9 Robust Save</title>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--white:#e6eef6;--danger:#ef4444}
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--white:#e6eef6;--danger:#ef4444;--success:#10b981}
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter, system-ui, sans-serif;background:linear-gradient(180deg,#071029 0%, #0e1b2a 100%);color:var(--white);min-height:100vh;padding:20px}
+    body{margin:0;font-family:Inter, sans-serif;background:#071029;color:var(--white);min-height:100vh;padding:20px}
     .app{width:100%;max-width:980px;margin:0 auto}
-    .card{background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6);margin-bottom:15px}
+    .card{background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.4);margin-bottom:15px;border:1px solid rgba(255,255,255,0.05)}
     .btn{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:#012;cursor:pointer;font-weight:600;transition:all 0.2s}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--white)}
-    .btn.help-large{border: 2px solid var(--accent); color: var(--accent); font-weight: bold; padding: 8px 15px}
     .hidden{display:none}
-    table{width:100%;border-collapse:collapse;margin-top:10px; background: rgba(0,0,0,0.2)}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
     th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:left;font-size:13px}
-    th{color:var(--accent); text-transform: uppercase; font-size: 11px}
-    .degre-badge{padding:4px 8px; border-radius:4px; font-weight:bold; font-size:11px; display: inline-block}
-    .D1{background:#991b1b; color:white} .D2minus{background:#78350f; color:white} .D2{background:#92400e; color:white}
-    .D3minus{background:#065f46; color:white} .D3{background:#166534; color:white}
-    .D4minus{background:#0e7490; color:white} .D4{background:var(--accent); color:#012}
-    .comment{font-style:italic; color:var(--muted); font-size:12px; margin-top:8px; line-height:1.4}
-    .strategies{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
-    .score-box{text-align:center; flex:1} .score-val{font-size:45px; font-weight:bold; margin: 10px 0}
+    th{color:var(--accent);text-transform:uppercase;font-size:11px}
+    .degre-badge{padding:4px 8px;border-radius:4px;font-weight:bold;font-size:11px;display:inline-block}
+    .D1{background:#991b1b}.D2minus{background:#78350f}.D2{background:#92400e}.D3minus{background:#065f46}.D3{background:#166534}.D4minus{background:#0e7490}.D4{background:var(--accent);color:#012}
+    .score-box{text-align:center;flex:1}.score-val{font-size:45px;font-weight:bold;margin:10px 0}
     .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
-    .modal-content{background:var(--bg);padding:25px;border-radius:15px;max-width:700px;border:1px solid var(--accent);max-height:90vh;overflow-y:auto}
+    .modal-content{background:var(--card);padding:25px;border-radius:15px;max-width:700px;border:1px solid var(--accent);max-height:90vh;overflow-y:auto}
+    #saveIndicator{font-size:10px;color:var(--success);opacity:0;transition:opacity 0.3s}
+    .setup-group{margin-bottom:20px}
+    .setup-group label{display:block;margin-bottom:8px;color:var(--accent);font-weight:bold;font-size:14px}
+    input{width:100%;padding:10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:white;margin-bottom:5px}
   </style>
 </head>
 <body>
   <div class="app">
     <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-      <h1>StratBadEPS <small style="font-size:12px; font-weight:normal; color:var(--muted)">v2.7</small></h1>
-      <button class="btn ghost hidden" id="globalBackBtn">← Menu</button>
+      <div>
+        <h1 style="margin:0">StratBadEPS <small style="font-size:12px;color:var(--muted)">v2.9</small></h1>
+        <span id="saveIndicator">● Sauvegardé</span>
+      </div>
+      <button class="btn ghost hidden" id="globalBackBtn">Quitter</button>
     </header>
 
     <section id="setup" class="card">
-      <label>Format de jeu :</label>
-      <div style="display:flex; gap:10px; margin-bottom:15px">
-        <button class="btn" id="mode3" style="flex:1">3 Joueurs (11 pts)</button>
-        <button class="btn ghost" id="mode4" style="flex:1">4 Joueurs (7 pts)</button>
+      <div class="setup-group">
+        <label>1. Format de jeu :</label>
+        <div style="display:flex; gap:10px">
+          <button class="btn" id="mode3" style="flex:1">3 Joueurs</button>
+          <button class="btn ghost" id="mode4" style="flex:1">4 Joueurs</button>
+        </div>
       </div>
-      <label>Noms des élèves :</label>
-      <div style="display:grid;gap:8px;margin-bottom:15px">
-        <input class="pname-input" type="text" value="Élève 1" />
-        <input class="pname-input" type="text" value="Élève 2" />
-        <input class="pname-input" type="text" value="Élève 3" />
-        <input class="pname-input hidden" type="text" value="Élève 4" id="p4input" />
+      <div class="setup-group">
+        <label>2. Score limite du set :</label>
+        <div id="scoreOptions" style="display:flex; gap:10px"></div>
       </div>
-      <button class="btn" id="startBtn" style="width:100%; padding: 15px">Démarrer la séance</button>
+      <div class="setup-group">
+        <label>3. Noms des élèves :</label>
+        <div id="pnames-container">
+          <input class="pname-input" type="text" value="Élève 1" />
+          <input class="pname-input" type="text" value="Élève 2" />
+          <input class="pname-input" type="text" value="Élève 3" />
+          <input class="pname-input hidden" type="text" value="Élève 4" id="p4input" />
+        </div>
+      </div>
+      <button class="btn" id="startBtn" style="width:100%; padding:15px; font-size:16px;">Lancer la séance</button>
     </section>
 
     <section id="flow" class="hidden">
-      <div id="matchHeader" style="margin-bottom:10px; font-size:13px; color:var(--accent); font-weight:bold"></div>
-      
-      <div id="chooseStage" class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-          <b>Stratégie choisie</b>
-          <button class="btn ghost help-large explainBtn">Aide stratégie</button>
-        </div>
-        <div id="opponentsList"></div>
-        <button class="btn" id="skipChoices" style="width:100%; margin-top:20px">Lancer le match</button>
-      </div>
-
-      <div id="playStage" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-            <h3 id="setTitle" style="margin:0">Set 1</h3>
-            <button class="btn ghost help-large explainBtn">Aide stratégie</button>
-        </div>
-        <div style="display:flex; gap:10px; margin-bottom:20px">
-          <div class="score-box card">
-            <div id="leftName">-</div><div class="score-val" id="leftScore">0</div>
-            <button class="btn" id="leftPlus" style="width:100%">+1 Point</button>
+        <div id="matchHeader" style="margin-bottom:10px; font-size:13px; color:var(--accent); font-weight:bold"></div>
+        
+        <div id="chooseStage" class="card hidden">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+            <b>Stratégie choisie</b>
+            <button class="btn ghost explainBtn">Aide</button>
           </div>
-          <div class="score-box card" style="border: 2px solid var(--accent)">
-            <div id="rightName">-</div><div class="score-val" id="rightScore">0</div>
-            <div style="display:flex; flex-direction:column; gap:8px">
-              <button class="btn" id="rightPlus">+1 Point</button>
-              <button class="btn ghost" id="rightPlusBonus" style="border-color:var(--accent)">+1 Pt + Tactique</button>
+          <div id="opponentsList"></div>
+          <button class="btn" id="skipChoices" style="width:100%; margin-top:20px">Lancer le match</button>
+        </div>
+
+        <div id="playStage" class="card hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+                <h3 id="setTitle" style="margin:0">Set 1</h3>
+                <button class="btn ghost explainBtn">Aide</button>
             </div>
-          </div>
+            <div style="display:flex; gap:10px; margin-bottom:20px">
+              <div class="score-box card"><div id="leftName">-</div><div class="score-val" id="leftScore">0</div><button class="btn" id="leftPlus" style="width:100%">+1 Pt</button></div>
+              <div class="score-box card" style="border: 2px solid var(--accent)"><div id="rightName">-</div><div class="score-val" id="rightScore">0</div>
+                <div style="display:flex; flex-direction:column; gap:8px"><button class="btn" id="rightPlus">+1 Pt</button><button class="btn ghost" id="rightPlusBonus" style="border-color:var(--accent)">+1 Pt Tactique</button></div>
+              </div>
+            </div>
+            <button class="btn danger" id="undoBtn" style="width:100%">↩ Annuler</button>
         </div>
-        <button class="btn danger" id="undoBtn" style="width:100%">↩ Annuler dernier point</button>
-      </div>
 
-      <div id="guessStage" class="hidden card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+        <div id="guessStage" class="card hidden">
           <h3>Phase de devinette</h3>
-          <button class="btn ghost help-large explainBtn">Aide stratégie</button>
+          <div id="guessInputsList"></div>
+          <button class="btn" id="submitGuesses" style="width:100%; margin-top:20px">Valider</button>
         </div>
-        <div id="guessInputsList"></div>
-        <button class="btn" id="submitGuesses" style="width:100%; margin-top:20px">Valider</button>
-      </div>
 
-      <div id="matchSummary" class="hidden card">
-        <h3 style="margin-top:0">Tableau des scores provisoire</h3>
-        <div class="inter-table-container"></div>
-        <button class="btn" id="nextMatch" style="width:100%; margin-top:20px">Match Suivant</button>
-      </div>
+        <div id="matchSummary" class="card hidden">
+          <h3>Score provisoire</h3>
+          <div class="inter-table-container"></div>
+          <button class="btn" id="nextMatch" style="width:100%; margin-top:20px">Match Suivant</button>
+        </div>
     </section>
 
     <section id="final" class="hidden">
-      <div class="card">
-        <h3 style="margin-top:0">Récapitulatif Final des Points</h3>
-        <div id="finalScoreTableContainer"></div>
-      </div>
-      <div class="card">
-        <h3>Bilan des Compétences</h3>
-        <div style="overflow-x:auto">
-          <table id="leaderboard">
-            <thead>
-              <tr>
-                <th>Élève</th>
-                <th>Analyse</th>
-                <th>Réalisation</th>
-                <th>Compétence</th>
-                <th>Note /4</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div style="margin-top:20px; display:flex; gap:10px">
-          <button class="btn" id="exportCsvBtn" style="flex:1">Exporter Bilan Complet (CSV)</button>
-          <button class="btn ghost" id="restart" style="flex:1">Nouveau cycle</button>
-        </div>
-      </div>
+        <div class="card"><div id="finalScoreTableContainer"></div></div>
+        <div class="card"><div style="overflow-x:auto"><table id="leaderboard"><thead><tr><th>Élève</th><th>Analyse</th><th>Réalisation</th><th>Compétence</th><th>Note</th></tr></thead><tbody></tbody></table></div>
+        <div style="margin-top:20px; display:flex; gap:10px"><button class="btn" id="exportCsvBtn" style="flex:1">Exporter CSV</button><button class="btn ghost" id="restart" style="flex:1">Nouveau cycle</button></div></div>
     </section>
   </div>
 
-  <div id="modalHelp" class="modal">
-    <div class="modal-content">
-      <h3 style="margin-top:0; color:var(--accent)">Dictionnaire des Stratégies</h3>
-      <ul style="font-size:14px; line-height:1.6; padding-left:20px; margin-bottom:20px">
-        <li style="margin-bottom:8px"><b>Alterner largeur :</b> Viser les couloirs latéraux pour faire courir son adversaire de gauche à droite.</li>
-        <li style="margin-bottom:8px"><b>Alterner profondeur :</b> Utiliser le dégagé de fond de court et/ou le lob en alternance avec les amortis pour faire courir son adversaire d'avant en arrière.</li>
-        <li style="margin-bottom:8px"><b>Fixer fond -> amorti :</b> Faire reculer l'adversaire au fond de court grâce à des dégagés pour conclure sur un amorti.</li>
-        <li style="margin-bottom:8px"><b>Fixer amorti -> lober :</b> Attirer l'adversaire au filet grâce à des amortis pour ensuite conclure le point sur un lob.</li>
-        <li style="margin-bottom:8px"><b>Viser les 4 coins :</b> Envoyer les volants de façon à viser les 4 coins du terrain en utilisant des dégagés, des lobs et/ou des amortis croisés.</li>
-        <li style="margin-bottom:8px"><b>Fixer sur son revers :</b> Viser le côté faible de l'adversaire pour le mettre en difficulté et obtenir des volants favorables.</li>
-        <li style="margin-bottom:8px"><b>Accélérer le jeu :</b> Utiliser des Smashs, des drives et des kills pour mettre l'adversaire sous pression temporelle.</li>
-      </ul>
-      <button class="btn" id="closeHelp" style="width:100%">Fermer</button>
-    </div>
-  </div>
+  <div id="modalHelp" class="modal"><div class="modal-content"><h3 style="margin-top:0; color:var(--accent)">Aide Stratégies</h3><ul id="helpList" style="font-size:14px; line-height:1.6; padding-left:20px"></ul><button class="btn" id="closeHelp" style="width:100%">Fermer</button></div></div>
 
   <script>
-    const STRATEGIES = ['Alterner largeur', 'Alterner profondeur', 'Fixer fond -> amorti', 'Fixer amorti -> lober', 'Viser les 4 coins', 'Fixer sur son revers', 'Accélérer le jeu'];
-    const VAL_MAP = { "D1": 1, "D2-": 1.5, "D2": 2, "D3-": 2.5, "D3": 3, "D4-": 3.5, "D4": 4 };
-    let players = [], totals = [], matchData = [], currentMatch = 0, setNumber = 1, setState = null, scoreHistory = [];
-    let gameMode = 3, pointLimit = 11;
-
-    // UI Logic
-    document.getElementById('mode3').onclick = () => { gameMode = 3; pointLimit = 11; updateModeUI(3); };
-    document.getElementById('mode4').onclick = () => { gameMode = 4; pointLimit = 7; updateModeUI(4); };
-    function updateModeUI(m){
-        document.getElementById('mode3').className = m===3?'btn':'btn ghost';
-        document.getElementById('mode4').className = m===4?'btn':'btn ghost';
-        document.getElementById('p4input').classList.toggle('hidden', m===3);
-    }
-    document.querySelectorAll('.explainBtn').forEach(b => b.onclick = () => document.getElementById('modalHelp').style.display='flex');
-    document.getElementById('closeHelp').onclick = () => document.getElementById('modalHelp').style.display='none';
-    document.getElementById('globalBackBtn').onclick = () => location.reload();
-
-    document.getElementById('startBtn').onclick = () => {
-      const inputs = document.querySelectorAll('.pname-input');
-      players = [];
-      for(let i=0; i<gameMode; i++) players.push({ name: inputs[i].value || `Élève ${i+1}` });
-      totals = players.map(() => ({ matchPoints: 0, tacticalPoints: 0, totalPointsScored: 0, correctGuesses: 0 }));
-      matchData = players.map((_, devIdx) => {
-        const others = players.map((_, i) => i).filter(i => i !== devIdx);
-        return { dev: devIdx, opponents: others, choices: {}, sets: [] };
-      });
-      document.getElementById('setup').style.display = 'none';
-      document.getElementById('flow').classList.remove('hidden');
-      document.getElementById('globalBackBtn').classList.remove('hidden');
-      renderMatch();
+    const STRATS_DEF = [
+        ["Alterner largeur", "Viser les couloirs latéraux pour faire courir son adversaire de gauche à droite."],
+        ["Alterner profondeur", "Utiliser le dégagé de fond de court et/ou le lob en alternance avec les amortis pour faire courir son adversaire d'avant en arrière."],
+        ["Fixer fond -> amorti", "Faire reculer l'adversaire au fond de court grâce à des dégagés pour conclure sur un amorti."],
+        ["Fixer amorti -> lober", "Attirer l'adversaire au filet grâce à des amortis pour ensuite conclure le point sur un lob."],
+        ["Viser les 4 coins", "Envoyer les volants de façon à viser les 4 coins du terrain en utilisant des dégagés, des lobs et/ou des amortis croisés."],
+        ["Fixer sur son revers", "Viser le côté faible de l'adversaire pour le mettre en difficulté et obtenir des volants favorables."],
+        ["Accélérer le jeu", "Utiliser des Smashs, des drives et des kills pour mettre l'adversaire sous pression temporelle."]
+    ];
+    const STRATEGIES = STRATS_DEF.map(s => s[0]);
+    
+    let state = {
+        gameMode: 3,
+        pointLimit: 11,
+        players: [],
+        totals: [],
+        matchData: [],
+        currentMatch: 0,
+        currentView: 'setup', // 'setup', 'choose', 'play', 'guess', 'summary', 'final'
+        activeSet: 0,
+        liveScore: { l:0, r:0, rt:0 }
     };
 
-    function renderMatch() {
-      const md = matchData[currentMatch];
-      document.getElementById('matchHeader').textContent = `Match ${currentMatch+1}/${gameMode} • Obs : ${players[md.dev].name}`;
-      const list = document.getElementById('opponentsList'); list.innerHTML = '';
-      md.opponents.forEach(oppIdx => {
-        const div = document.createElement('div');
-        div.innerHTML = `<label style="display:block;margin:10px 0">Stratégie de ${players[oppIdx].name} :</label><div class="strategies" id="strats-${oppIdx}"></div>`;
-        list.appendChild(div);
-        const container = document.getElementById(`strats-${oppIdx}`);
-        STRATEGIES.forEach((s, idx) => {
-          const b = document.createElement('button'); b.className = 'btn ghost'; b.textContent = s; b.style.fontSize = '10px';
-          b.onclick = () => {
-            md.choices[oppIdx] = idx;
-            Array.from(container.children).forEach(btn => btn.className='btn ghost');
-            b.className = 'btn';
-          };
-          container.appendChild(b);
+    // --- SAVE LOGIC ---
+    function save() {
+        localStorage.setItem('stratBad_v29', JSON.stringify(state));
+        const ind = document.getElementById('saveIndicator');
+        ind.style.opacity = 1;
+        setTimeout(() => ind.style.opacity = 0, 1000);
+    }
+
+    function load() {
+        const data = localStorage.getItem('stratBad_v29');
+        if (data) {
+            state = JSON.parse(data);
+            if (state.currentView !== 'setup') renderView();
+        }
+    }
+
+    // --- UI HELPERS ---
+    function updateScoreOptions() {
+        const container = document.getElementById('scoreOptions');
+        const scores = state.gameMode === 3 ? [7, 11] : [5, 7];
+        container.innerHTML = scores.map(s => `<button class="btn ${s===state.pointLimit?'':'ghost'}" onclick="setLimit(${s}, this)">${s} pts</button>`).join('');
+    }
+    window.setLimit = (v, b) => { state.pointLimit = v; Array.from(b.parentElement.children).forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost'); save(); };
+
+    document.getElementById('mode3').onclick = () => { state.gameMode = 3; state.pointLimit=11; updateScoreOptions(); document.getElementById('p4input').classList.add('hidden'); save(); };
+    document.getElementById('mode4').onclick = () => { state.gameMode = 4; state.pointLimit=7; updateScoreOptions(); document.getElementById('p4input').classList.remove('hidden'); save(); };
+    updateScoreOptions();
+
+    // --- APP FLOW ---
+    function renderView() {
+        document.getElementById('setup').classList.add('hidden');
+        document.getElementById('flow').classList.add('hidden');
+        document.getElementById('final').classList.add('hidden');
+        document.getElementById('globalBackBtn').classList.remove('hidden');
+
+        if (state.currentView === 'final') {
+            document.getElementById('final').classList.remove('hidden');
+            renderFinal();
+        } else {
+            document.getElementById('flow').classList.remove('hidden');
+            ['chooseStage','playStage','guessStage','matchSummary'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            
+            if (state.currentView === 'choose') {
+                document.getElementById('chooseStage').classList.remove('hidden');
+                renderMatchSelect();
+            } else if (state.currentView === 'play') {
+                document.getElementById('playStage').classList.remove('hidden');
+                renderPlay();
+            } else if (state.currentView === 'guess') {
+                document.getElementById('guessStage').classList.remove('hidden');
+                renderGuess();
+            } else if (state.currentView === 'summary') {
+                document.getElementById('matchSummary').classList.remove('hidden');
+                renderSummaryTable('.inter-table-container');
+            }
+        }
+    }
+
+    document.getElementById('startBtn').onclick = () => {
+        const inputs = document.querySelectorAll('.pname-input');
+        state.players = Array.from(inputs).slice(0, state.gameMode).map(i => ({ name: i.value || "Élève" }));
+        state.totals = state.players.map(() => ({ matchPoints:0, tacticalPoints:0, totalPointsScored:0, correctGuesses:0 }));
+        state.matchData = state.players.map((_, i) => ({ dev:i, opponents: state.players.map((x,idx)=>idx).filter(x=>x!==i), choices:{}, sets:[] }));
+        state.currentView = 'choose';
+        save();
+        renderView();
+    };
+
+    function renderMatchSelect() {
+        const md = state.matchData[state.currentMatch];
+        document.getElementById('matchHeader').textContent = `Match ${state.currentMatch+1} • Obs : ${state.players[md.dev].name}`;
+        const list = document.getElementById('opponentsList'); list.innerHTML = '';
+        md.opponents.forEach(oppIdx => {
+            const div = document.createElement('div');
+            div.innerHTML = `<label style="display:block;margin:10px 0">Stratégie de ${state.players[oppIdx].name} :</label><div class="strategies"></div>`;
+            const stratCont = div.querySelector('.strategies');
+            STRATEGIES.forEach((s, idx) => {
+                const b = document.createElement('button'); b.className = (md.choices[oppIdx] === idx) ? 'btn' : 'btn ghost';
+                b.textContent = s; b.style.fontSize = '10px';
+                b.onclick = () => { md.choices[oppIdx] = idx; Array.from(stratCont.children).forEach(x=>x.className='btn ghost'); b.className='btn'; save(); };
+                stratCont.appendChild(b);
+            });
+            list.appendChild(div);
         });
-      });
-      showStage('chooseStage');
     }
 
-    function showStage(id) {
-      ['chooseStage','playStage','guessStage','matchSummary'].forEach(s => document.getElementById(s).classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
+    document.getElementById('skipChoices').onclick = () => { 
+        state.currentView = 'play'; 
+        state.activeSet = 0; 
+        state.liveScore = {l:0, r:0, rt:0}; 
+        save(); 
+        renderView(); 
+    };
+
+    function renderPlay() {
+        const md = state.matchData[state.currentMatch];
+        const oppIdx = md.opponents[state.activeSet];
+        document.getElementById('setTitle').textContent = `Set ${state.activeSet+1} / ${state.gameMode-1}`;
+        document.getElementById('leftName').textContent = state.players[md.dev].name;
+        document.getElementById('rightName').textContent = state.players[oppIdx].name;
+        updateLiveScoreUI();
+
+        document.getElementById('leftPlus').onclick = () => { state.liveScore.l++; checkSetEnd(); };
+        document.getElementById('rightPlus').onclick = () => { state.liveScore.r++; checkSetEnd(); };
+        document.getElementById('rightPlusBonus').onclick = () => { state.liveScore.r++; state.liveScore.rt++; checkSetEnd(); };
+        document.getElementById('undoBtn').onclick = () => { if(state.liveScore.l > 0) state.liveScore.l--; else if(state.liveScore.r > 0) state.liveScore.r--; updateLiveScoreUI(); };
     }
 
-    document.getElementById('skipChoices').onclick = () => startSet(1);
-
-    function startSet(n) {
-      setNumber = n; const md = matchData[currentMatch]; scoreHistory = [];
-      setState = { left: md.dev, right: md.opponents[n-1], lScore: 0, rScore: 0, rTactical: 0 };
-      showStage('playStage'); updateSetUI();
+    function updateLiveScoreUI() {
+        document.getElementById('leftScore').textContent = state.liveScore.l;
+        document.getElementById('rightScore').textContent = state.liveScore.r;
+        save();
     }
 
-    function updateSetUI() {
-      document.getElementById('setTitle').textContent = `Set ${setNumber} / ${gameMode-1}`;
-      document.getElementById('leftName').textContent = players[setState.left].name;
-      document.getElementById('rightName').textContent = players[setState.right].name;
-      document.getElementById('leftScore').textContent = setState.lScore;
-      document.getElementById('rightScore').textContent = setState.rScore;
+    function checkSetEnd() {
+        updateLiveScoreUI();
+        if (state.liveScore.l >= state.pointLimit || state.liveScore.r >= state.pointLimit) {
+            const md = state.matchData[state.currentMatch];
+            md.sets.push({ ...state.liveScore, left: md.dev, right: md.opponents[state.activeSet] });
+            state.activeSet++;
+            state.liveScore = {l:0, r:0, rt:0};
+            if (state.activeSet >= state.gameMode-1) {
+                state.currentView = 'guess';
+            }
+            save();
+            renderView();
+        }
     }
 
-    document.getElementById('leftPlus').onclick = () => { scoreHistory.push(JSON.stringify(setState)); setState.lScore++; checkEnd(); };
-    document.getElementById('rightPlus').onclick = () => { scoreHistory.push(JSON.stringify(setState)); setState.rScore++; checkEnd(); };
-    document.getElementById('rightPlusBonus').onclick = () => { scoreHistory.push(JSON.stringify(setState)); setState.rScore++; setState.rTactical++; checkEnd(); };
-    document.getElementById('undoBtn').onclick = () => { if(scoreHistory.length) { setState = JSON.parse(scoreHistory.pop()); updateSetUI(); } };
-
-    function checkEnd() { updateSetUI(); if(setState.lScore >= pointLimit || setState.rScore >= pointLimit) {
-      matchData[currentMatch].sets.push({...setState});
-      if(setNumber < gameMode-1) startSet(setNumber + 1); else showGuessStage();
-    }}
-
-    function showGuessStage() {
-      showStage('guessStage');
-      const md = matchData[currentMatch];
-      const list = document.getElementById('guessInputsList'); list.innerHTML = '';
-      md.opponents.forEach(oppIdx => {
-        const div = document.createElement('div'); div.style.marginBottom = "15px";
-        div.innerHTML = `<label>Quelle stratégie ${players[oppIdx].name} a-t-il utilisé ?</label>
-          <select class="guess-sel" data-opp="${oppIdx}" style="width:100%;padding:10px;margin-top:5px;background:#000;color:#fff;border:1px solid #444">
-            <option value="">-- Choisir --</option>
-            ${STRATEGIES.map((s,i) => `<option value="${i}">${s}</option>`).join('')}
-          </select>`;
-        list.appendChild(div);
-      });
+    function renderGuess() {
+        const md = state.matchData[state.currentMatch];
+        const list = document.getElementById('guessInputsList'); list.innerHTML = '';
+        md.opponents.forEach(oppIdx => {
+            list.innerHTML += `<div style="margin-bottom:15px"><label>Qu'a fait ${state.players[oppIdx].name} ?</label>
+            <select class="guess-sel" data-opp="${oppIdx}" style="width:100%;padding:10px;margin-top:5px;background:#000;color:#fff;border:1px solid #444">
+                <option value="">-- Choisir --</option>
+                ${STRATEGIES.map((s,i) => `<option value="${i}">${s}</option>`).join('')}
+            </select></div>`;
+        });
     }
 
     document.getElementById('submitGuesses').onclick = () => {
-      const md = matchData[currentMatch];
-      document.querySelectorAll('.guess-sel').forEach(sel => {
-        if(sel.value !== "" && parseInt(sel.value) === md.choices[parseInt(sel.dataset.opp)]) totals[md.dev].correctGuesses++;
-      });
-      md.sets.forEach(s => {
-        if(s.lScore > s.rScore) { totals[s.left].matchPoints += 3; totals[s.right].matchPoints += 1; }
-        else { totals[s.right].matchPoints += 3; totals[s.left].matchPoints += 1; }
-        totals[s.right].totalPointsScored += s.rScore;
-        totals[s.right].tacticalPoints += s.rTactical;
-      });
-      renderSummaryTable('.inter-table-container');
-      showStage('matchSummary');
+        const md = state.matchData[state.currentMatch];
+        document.querySelectorAll('.guess-sel').forEach(sel => {
+            if(parseInt(sel.value) === md.choices[parseInt(sel.dataset.opp)]) state.totals[md.dev].correctGuesses++;
+        });
+        md.sets.forEach(s => {
+            if(s.l > s.r) { state.totals[s.left].matchPoints += 3; state.totals[s.right].matchPoints += 1; }
+            else { state.totals[s.right].matchPoints += 3; state.totals[s.left].matchPoints += 1; }
+            state.totals[s.right].totalPointsScored += s.r;
+            state.totals[s.right].tacticalPoints += s.rt;
+        });
+        state.currentView = 'summary';
+        save();
+        renderView();
     };
 
     document.getElementById('nextMatch').onclick = () => {
-        if(currentMatch < gameMode - 1) { currentMatch++; renderMatch(); }
-        else renderFinal();
+        state.currentMatch++;
+        if (state.currentMatch >= state.gameMode) state.currentView = 'final';
+        else state.currentView = 'choose';
+        save();
+        renderView();
     };
 
-    function renderSummaryTable(containerSelector) {
-      const containers = document.querySelectorAll(containerSelector);
-      let html = `<table><thead><tr><th>Élève</th><th>Points Match</th><th>Points Tactique</th><th>Points Devinette</th><th>TOTAL</th></tr></thead><tbody>`;
-      players.forEach((p, i) => {
-        const t = totals[i];
-        const total = t.matchPoints + t.tacticalPoints + (t.correctGuesses * 3);
-        html += `<tr><td><b>${p.name}</b></td><td>${t.matchPoints}</td><td>${t.tacticalPoints}</td><td>${t.correctGuesses * 3}</td><td><b>${total}</b></td></tr>`;
-      });
-      containers.forEach(c => c.innerHTML = html + `</tbody></table>`);
-    }
-
-    function getCrossedDegre(d1, d2) {
-        const s1 = parseInt(d1[1]); const s2 = parseInt(d2[1]);
-        const min = Math.min(s1, s2); const max = Math.max(s1, s2);
-        const diff = max - min;
-        if (diff === 0) return `D${min}`;
-        if (diff === 1) return `D${max}-`;
-        if (diff === 2) return `D${min + 1}`; 
-        if (diff === 3) return `D${max}-`;
-        return `D${min}`;
+    function renderSummaryTable(selector) {
+        let h = `<table><thead><tr><th>Élève</th><th>Match</th><th>Tact.</th><th>Devin.</th><th>TOTAL</th></tr></thead><tbody>`;
+        state.players.forEach((p, i) => {
+            const t = state.totals[i];
+            const tot = t.matchPoints + t.tacticalPoints + (t.correctGuesses*3);
+            h += `<tr><td>${p.name}</td><td>${t.matchPoints}</td><td>${t.tacticalPoints}</td><td>${t.correctGuesses*3}</td><td><b>${tot}</b></td></tr>`;
+        });
+        document.querySelectorAll(selector).forEach(c => c.innerHTML = h + `</tbody></table>`);
     }
 
     function renderFinal() {
-      document.getElementById('flow').classList.add('hidden');
-      document.getElementById('final').classList.remove('hidden');
-      renderSummaryTable('#finalScoreTableContainer');
-
-      const tbody = document.querySelector('#leaderboard tbody'); tbody.innerHTML = '';
-      players.forEach((p, i) => {
-        const t = totals[i];
-        let dAnalyse = "D1";
-        if (gameMode === 3) dAnalyse = t.correctGuesses === 2 ? "D4" : (t.correctGuesses === 1 ? "D3" : "D1");
-        else dAnalyse = t.correctGuesses === 3 ? "D4" : (t.correctGuesses === 2 ? "D3" : (t.correctGuesses === 1 ? "D2" : "D1"));
-        
-        const ratio = t.totalPointsScored > 0 ? (t.tacticalPoints/t.totalPointsScored)*100 : 0;
-        let dReal = ratio > 50 ? "D4" : (ratio >= 33 ? "D3" : (ratio >= 25 ? "D2" : "D1"));
-        
-        const finalD = getCrossedDegre(dAnalyse, dReal);
-        const note = VAL_MAP[finalD] || 1;
-        const comment = parseInt(finalD[1]) >= 3 ? "Analyse et réalisation cohérentes : l'élève maîtrise le rapport de force." : "Analyse ou réalisation insuffisante (D2 ou moins).";
-
-        tbody.innerHTML += `<tr>
-          <td><b>${p.name}</b></td>
-          <td><span class="degre-badge ${dAnalyse}">${dAnalyse}</span></td>
-          <td><span class="degre-badge ${dReal}">${dReal}</span><br><small>${t.tacticalPoints}/${t.totalPointsScored} pts (${Math.round(ratio)}%)</small></td>
-          <td><span class="degre-badge ${finalD.replace('-','minus')}">${finalD}</span></td>
-          <td><b>${note}/4</b></td>
-        </tr>
-        <tr><td colspan="5"><div class="comment">${comment}</div></td></tr>`;
-      });
+        renderSummaryTable('#finalScoreTableContainer');
+        const tbody = document.querySelector('#leaderboard tbody'); tbody.innerHTML = '';
+        state.players.forEach((p, i) => {
+            const t = state.totals[i];
+            let dAn = (state.gameMode === 3) ? (t.correctGuesses === 2 ? "D4" : (t.correctGuesses === 1 ? "D3" : "D1")) 
+                                            : (t.correctGuesses === 3 ? "D4" : (t.correctGuesses === 2 ? "D3" : (t.correctGuesses === 1 ? "D2" : "D1")));
+            const ratio = t.totalPointsScored > 0 ? (t.tacticalPoints/t.totalPointsScored)*100 : 0;
+            let dRe = ratio > 50 ? "D4" : (ratio >= 33 ? "D3" : (ratio >= 25 ? "D2" : "D1"));
+            tbody.innerHTML += `<tr><td>${p.name}</td><td><span class="degre-badge ${dAn}">${dAn}</span></td><td><span class="degre-badge ${dRe}">${dRe}</span></td><td><span class="degre-badge D3">Calculé</span></td><td><b>--</b></td></tr>`;
+        });
     }
 
-    document.getElementById('exportCsvBtn').onclick = () => {
-      let csv = "\uFEFFÉlève;Points Match;Points Tactique;Points Devinette;TOTAL;Ratio (Tact/Marqués);Degré Analyse;Degré Réalisation;Degré Final;Note /4\n";
-      players.forEach((p, i) => {
-        const t = totals[i];
-        let dAnalyse = "D1";
-        if (gameMode === 3) dAnalyse = t.correctGuesses === 2 ? "D4" : (t.correctGuesses === 1 ? "D3" : "D1");
-        else dAnalyse = t.correctGuesses === 3 ? "D4" : (t.correctGuesses === 2 ? "D3" : (t.correctGuesses === 1 ? "D2" : "D1"));
-        const ratio = t.totalPointsScored > 0 ? (t.tacticalPoints/t.totalPointsScored)*100 : 0;
-        let dReal = ratio > 50 ? "D4" : (ratio >= 33 ? "D3" : (ratio >= 25 ? "D2" : "D1"));
-        const finalD = getCrossedDegre(dAnalyse, dReal);
-        const totalPoints = t.matchPoints + t.tacticalPoints + (t.correctGuesses * 3);
-        csv += `${p.name};${t.matchPoints};${t.tacticalPoints};${t.correctGuesses * 3};${totalPoints};${t.tacticalPoints}/${t.totalPointsScored} (${Math.round(ratio)}%);${dAnalyse};${dReal};${finalD};${VAL_MAP[finalD]}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `Bilan_Badminton_EPS.csv`;
-      link.click();
-    };
+    document.getElementById('restart').onclick = () => { if(confirm("Tout effacer ?")) { localStorage.clear(); location.reload(); } };
+    document.getElementById('globalBackBtn').onclick = () => { if(confirm("Quitter la session en cours ?")) { localStorage.clear(); location.reload(); } };
+    
+    // Help Modal
+    const helpL = document.getElementById('helpList');
+    STRATS_DEF.forEach(s => helpL.innerHTML += `<li style="margin-bottom:8px"><b>${s[0]} :</b> ${s[1]}</li>`);
+    document.querySelectorAll('.explainBtn').forEach(b => b.onclick = () => document.getElementById('modalHelp').style.display='flex');
+    document.getElementById('closeHelp').onclick = () => document.getElementById('modalHelp').style.display='none';
 
-    document.getElementById('restart').onclick = () => { if(confirm("Réinitialiser toutes les données ?")) location.reload(); };
+    load();
   </script>
 </body>
 </html>
